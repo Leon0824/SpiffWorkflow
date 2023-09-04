@@ -64,5 +64,5 @@ class Cancel(TaskSpec):
         return serializer.serialize_cancel(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_cancel(wf_spec, s_state)

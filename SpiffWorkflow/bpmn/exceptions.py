@@ -40,10 +40,7 @@ class WorkflowTaskException(WorkflowException):
         self.line_number = line_number
         self.offset = offset
         self.error_line = error_line
-        if exception:
-            self.error_type = exception.__class__.__name__
-        else:
-            self.error_type = "unknown"
+        self.error_type = exception.__class__.__name__ if exception else "unknown"
         super().__init__(error_msg, task_spec=task.task_spec)
 
         if isinstance(exception, SyntaxError) and not line_number:
@@ -87,8 +84,9 @@ class WorkflowTaskException(WorkflowException):
         """Returns a string along the lines of 'did you mean 'dog'? Given
         a name_error, and a set of possible things that could have been called,
         or an empty string if no valid suggestions come up. """
-        def_match = re.match("name '(.+)' is not defined", str(name_exception))
-        if def_match:
+        if def_match := re.match(
+            "name '(.+)' is not defined", str(name_exception)
+        ):
             bad_variable = re.match("name '(.+)' is not defined", str(name_exception)).group(1)
             most_similar = levenshtein.most_similar(bad_variable, options, 3)
             error_msg = ""

@@ -42,9 +42,9 @@ class DecisionRunner:
         self.dmnParser.parse()
 
         decision = self.dmnParser.decision
-        assert len(decision.decisionTables) == 1, \
-            'Exactly one decision table should exist! (%s)' \
-            % (len(decision.decisionTables))
+        assert (
+            len(decision.decisionTables) == 1
+        ), f'Exactly one decision table should exist! ({len(decision.decisionTables)})'
 
         self.decision_table = decision.decisionTables[0]
         self.dmnEngine = DMNEngine(self.decision_table)

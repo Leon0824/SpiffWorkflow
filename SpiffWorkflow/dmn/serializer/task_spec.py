@@ -50,13 +50,12 @@ class BaseBusinessRuleTaskConverter(TaskSpecConverter):
         }
 
     def output_entry_to_dict(self, entry):
-        dct = {
+        return {
             'id': entry.id,
             'output_id': entry.output.id,
             'description': entry.description,
             'text': entry.text,
         }
-        return dct
 
     def rule_to_dict(self, rule):
         return {

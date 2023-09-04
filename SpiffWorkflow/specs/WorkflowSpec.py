@@ -33,7 +33,7 @@ class WorkflowSpec(object):
         self.name = name or ''
         self.description = ''
         self.file = filename
-        self.task_specs = dict()
+        self.task_specs = {}
         self.start = None
         if addstart:
             self.start = StartTask(self)
@@ -43,7 +43,7 @@ class WorkflowSpec(object):
         Called by a task spec when it was added into the workflow.
         """
         if task_spec.name in self.task_specs:
-            raise KeyError('Duplicate task spec name: ' + task_spec.name)
+            raise KeyError(f'Duplicate task spec name: {task_spec.name}')
         self.task_specs[task_spec.name] = task_spec
 
     def get_task_spec_from_name(self, name):
@@ -72,9 +72,7 @@ class WorkflowSpec(object):
             current.append(task)
             if isinstance(task, Join):
                 if task in history:
-                    msg = "Found loop with '%s': %s then '%s' again" % (
-                        task.name, '->'.join([p.name for p in history]),
-                        task.name)
+                    msg = f"Found loop with '{task.name}': {'->'.join([p.name for p in history])} then '{task.name}' again"
                     raise Exception(msg)
                 for predecessor in task.inputs:
                     recursive_find_loop(predecessor, current)
@@ -134,33 +132,37 @@ class WorkflowSpec(object):
 
         def recursive_dump(task_spec, indent):
             if task_spec in done:
-                return '[shown earlier] %s (%s:%s)' % (
-                    task_spec.name,
-                    task_spec.__class__.__name__,
-                    hex(id(task_spec))
-                ) + '\n'
+                return (
+                    f'[shown earlier] {task_spec.name} ({task_spec.__class__.__name__}:{hex(id(task_spec))})'
+                    + '\n'
+                )
             done.add(task_spec)
-            dump = '%s (%s:%s)' % (
-                task_spec.name,
-                task_spec.__class__.__name__,
-                hex(id(task_spec))
-            ) + '\n'
+            dump = (
+                f'{task_spec.name} ({task_spec.__class__.__name__}:{hex(id(task_spec))})'
+                + '\n'
+            )
             if verbose:
                 if task_spec.inputs:
-                    dump += indent + \
-                        '- IN: ' + \
-                        ','.join(['%s (%s)' % (t.name, hex(id(t))) for t in task_spec.inputs]) + \
-                        '\n'
+                    dump += (
+                        indent
+                        + '- IN: '
+                        + ','.join(
+                            [f'{t.name} ({hex(id(t))})' for t in task_spec.inputs]
+                        )
+                    ) + '\n'
                 if task_spec.outputs:
-                    dump += indent + \
-                        '- OUT: ' + \
-                        ','.join(['%s (%s)' % (t.name, hex(id(t))) for t in task_spec.outputs]) + \
-                        '\n'
+                    dump += (
+                        indent
+                        + '- OUT: '
+                        + ','.join(
+                            [f'{t.name} ({hex(id(t))})' for t in task_spec.outputs]
+                        )
+                    ) + '\n'
             # sub_specs = ([task_spec.spec.start] if hasattr(task_spec, 'spec') else []) + task_spec.outputs
             for i, t in enumerate(task_spec.outputs):
                 dump += indent + \
-                    '   --> ' + \
-                    recursive_dump(t, indent + ('   |   ' if i + 1 < len(task_spec.outputs) else '       '))
+                        '   --> ' + \
+                        recursive_dump(t, indent + ('   |   ' if i + 1 < len(task_spec.outputs) else '       '))
             return dump
 
         dump = recursive_dump(self.start, '')

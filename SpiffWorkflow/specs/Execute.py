@@ -66,10 +66,9 @@ class Execute(TaskSpec):
             if my_task.subprocess.returncode is None:
                 # Still waiting
                 return False
-            else:
-                results = my_task.subprocess.communicate()
-                my_task.results = results
-                return True
+            results = my_task.subprocess.communicate()
+            my_task.results = results
+            return True
         return False
 
     def _update_hook(self, my_task):
@@ -83,6 +82,5 @@ class Execute(TaskSpec):
         return serializer.serialize_execute(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
-        spec = serializer.deserialize_execute(wf_spec, s_state)
-        return spec
+    def deserialize(cls, serializer, wf_spec, s_state):
+        return serializer.deserialize_execute(wf_spec, s_state)

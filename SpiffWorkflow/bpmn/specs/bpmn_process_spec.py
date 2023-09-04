@@ -37,7 +37,7 @@ class BpmnProcessSpec(WorkflowSpec):
         """
         super(BpmnProcessSpec, self).__init__(name=name, filename=filename)
         self.start = BpmnStartTask(self, 'Start')
-        self.end = _EndJoin(self, '%s.EndJoin' % (self.name))
+        self.end = _EndJoin(self, f'{self.name}.EndJoin')
         self.end.connect(SimpleBpmnTask(self, 'End'))
         self.svg = svg
         self.description = description

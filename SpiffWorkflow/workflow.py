@@ -145,9 +145,7 @@ class Workflow(object):
         :param success: Whether the Workflow should be marked as successfully completed.
         """
         self.success = success
-        cancel = []
-        for task in Task.Iterator(self.task_tree, TaskState.NOT_FINISHED_MASK):
-            cancel.append(task)
+        cancel = list(Task.Iterator(self.task_tree, TaskState.NOT_FINISHED_MASK))
         for task in cancel:
             task.cancel()
         logger.info(f'Cancel with {len(cancel)} remaining', extra=self.log_info())
@@ -173,7 +171,7 @@ class Workflow(object):
         :rtype:  list[Task]
         :returns: A list of tasks.
         """
-        return [t for t in Task.Iterator(self.task_tree, state)]
+        return list(Task.Iterator(self.task_tree, state))
 
     def get_tasks_from_spec_name(self, name):
         """

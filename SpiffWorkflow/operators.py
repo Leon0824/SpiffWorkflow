@@ -32,8 +32,8 @@ class Term(object):
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
-    def __getattr__(*args):
-        val = dict.get(*args)
+    def __getattr__(self):
+        val = dict.get(*self)
         return DotDict(val) if type(val) is dict else val
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -215,15 +215,12 @@ class Operator(Term):
         """
         Constructor.
         """
-        if len(args) == 0:
+        if not args:
             raise TypeError("Too few arguments")
         self.args = args
 
     def _get_values(self, task):
-        values = []
-        for arg in self.args:
-            values.append(str(valueof(task, arg)))
-        return values
+        return [str(valueof(task, arg)) for arg in self.args]
 
     def _matches(self, task):
         raise NotImplementedError("Abstract class, do not call")
@@ -360,10 +357,7 @@ class Match(Operator):
         self.regex = re.compile(regex)
 
     def _matches(self, task):
-        for value in self._get_values(task):
-            if not self.regex.search(value):
-                return False
-        return True
+        return all(self.regex.search(value) for value in self._get_values(task))
 
     def serialize(self, serializer):
         return serializer.serialize_operator_match(self)

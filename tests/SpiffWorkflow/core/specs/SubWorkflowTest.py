@@ -48,7 +48,7 @@ class TaskSpecTest(unittest.TestCase):
         ready_tasks = self.workflow.get_tasks(TaskState.READY)
         all_tasks = sorted([name] + other_ready_tasks)
         self.assertEqual(all_tasks, sorted([t.task_spec.name for t in ready_tasks]))
-        task = list([t for t in ready_tasks if t.task_spec.name == name])[0]
+        task = [t for t in ready_tasks if t.task_spec.name == name][0]
         task.run()
 
     def test_block_to_subworkflow(self):
@@ -109,7 +109,7 @@ class TaskSpecTest(unittest.TestCase):
 
         # Now refresh waiting tasks:
         # Update the state of every WAITING task.
-        for thetask in [t for t in self.workflow.get_tasks(TaskState.WAITING)]:
+        for thetask in list(self.workflow.get_tasks(TaskState.WAITING)):
             thetask.task_spec._update(thetask)
 
         self.do_next_unique_task('last')

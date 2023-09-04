@@ -47,7 +47,7 @@ class PythonScriptEngine(object):
 
         if environment is None:
             environment_globals = {}
-            environment_globals.update(default_globals or {})
+            environment_globals |= (default_globals or {})
             environment_globals.update(scripting_additions or {})
             self.environment = TaskDataEnvironment(environment_globals)
         else:
@@ -91,12 +91,11 @@ class PythonScriptEngine(object):
             return err
         detail = err.__class__.__name__
         if len(err.args) > 0:
-            detail += ":" + err.args[0]
+            detail += f":{err.args[0]}"
         return WorkflowTaskException(detail, task=task, exception=err, line_number=line_number, error_line=error_line)
 
     def get_error_line_number_and_content(self, script, err):
         line_number = 0
-        error_line = ''
         if isinstance(err, SyntaxError):
             line_number = err.lineno
         else:
@@ -107,8 +106,7 @@ class PythonScriptEngine(object):
             for frame_summary in traceback.extract_tb(tb):
                 if frame_summary.filename == '<string>':
                     line_number = frame_summary.lineno
-        if line_number > 0:
-            error_line = script.splitlines()[line_number - 1]
+        error_line = script.splitlines()[line_number - 1] if line_number > 0 else ''
         return line_number, error_line
 
     def _evaluate(self, expression, context, external_methods=None):

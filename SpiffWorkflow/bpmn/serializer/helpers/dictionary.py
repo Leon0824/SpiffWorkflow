@@ -94,7 +94,7 @@ class DictionaryConverter:
             to_dict = self.convert_to_dict.get(typename)
             return to_dict(obj)
         elif isinstance(obj, dict):
-            return dict((k, self.convert(v)) for k, v in obj.items())
+            return {k: self.convert(v) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple, set)):
             return obj.__class__([ self.convert(item) for item in obj ])
         else:
@@ -113,11 +113,11 @@ class DictionaryConverter:
             the restored object for registered objects or the original for
             unregistered values
         """
-        if isinstance(val, dict) and 'typename' in val:
+        if isinstance(val, dict):
+            if 'typename' not in val:
+                return {k: self.restore(v) for k, v in val.items()}
             from_dict = self.convert_from_dict.get(val.pop('typename'))
             return from_dict(val)
-        elif isinstance(val, dict):
-            return dict((k, self.restore(v)) for k, v in val.items())
         if isinstance(val, (list, tuple, set)):
             return val.__class__([ self.restore(item) for item in val ])
         else:

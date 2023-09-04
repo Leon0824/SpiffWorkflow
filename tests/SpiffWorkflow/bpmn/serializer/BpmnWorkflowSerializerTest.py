@@ -35,20 +35,25 @@ class BpmnWorkflowSerializerTest(BaseTestCase):
         json.loads(serialized)
 
     def testSerializeWorkflowCustomJSONEncoderDecoder(self):
+
+
+
         class MyCls:
             a = 1
             def to_dict(self):
                 return {'a': 1, 'my_type': 'mycls'}
 
             @classmethod
-            def from_dict(self, data):
+            def from_dict(cls, data):
                 return MyCls()
+
+
+
 
         class MyJsonEncoder(json.JSONEncoder):
             def default(self, z):
-                if isinstance(z, MyCls):
-                    return z.to_dict()
-                return super().default(z)
+                return z.to_dict() if isinstance(z, MyCls) else super().default(z)
+
 
         class MyJsonDecoder(json.JSONDecoder):
             classes = {'mycls': MyCls}

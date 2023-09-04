@@ -41,9 +41,8 @@ class SpiffEventDefinitionParser(SpiffTaskParser, EventDefinitionParser):
     def parse_message_event(self, message_event):
         """Parse a Spiff message event."""
 
-        message_ref = message_event.get('messageRef')
-        if message_ref:
-            message = one(self.doc_xpath('.//bpmn:message[@id="%s"]' % message_ref))
+        if message_ref := message_event.get('messageRef'):
+            message = one(self.doc_xpath(f'.//bpmn:message[@id="{message_ref}"]'))
             name = message.get('name')
             extensions = self.parse_extensions(message)
             correlations = self.get_message_correlations(message_ref)

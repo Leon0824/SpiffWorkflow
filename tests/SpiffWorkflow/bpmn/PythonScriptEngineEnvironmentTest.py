@@ -85,8 +85,7 @@ class PythonScriptEngineEnvironmentTest(BpmnWorkflowTestCase):
         tasks_to_check = self.workflow.get_tasks(TaskState.FINISHED_MASK)
         task_data = [task.data for task in tasks_to_check]
         task_data_to_check = list(filter(len, task_data))
-        task_data_len = len(json.dumps(task_data_to_check))
-        return task_data_len
+        return len(json.dumps(task_data_to_check))
 
 
 class StartedTaskTest(BpmnWorkflowTestCase):

@@ -51,13 +51,13 @@ import warnings
 class DictionarySerializer(Serializer):
 
     def serialize_dict(self, thedict):
-        return dict(
-            (str(k), b64encode(pickle.dumps(v, protocol=pickle.HIGHEST_PROTOCOL)))
+        return {
+            str(k): b64encode(pickle.dumps(v, protocol=pickle.HIGHEST_PROTOCOL))
             for k, v in list(thedict.items())
-        )
+        }
 
     def deserialize_dict(self, s_state):
-        return dict((k, pickle.loads(b64decode(v))) for k, v in list(s_state.items()))
+        return {k: pickle.loads(b64decode(v)) for k, v in list(s_state.items())}
 
     def serialize_list(self, thelist):
         return [b64encode(pickle.dumps(v, protocol=pickle.HIGHEST_PROTOCOL)) for v in thelist]
@@ -120,7 +120,7 @@ class DictionarySerializer(Serializer):
             return 'PathAttrib', self.serialize_pathattrib(arg)
         elif isinstance(arg, Operator):
             module = arg.__class__.__module__
-            arg_type = module + '.' + arg.__class__.__name__
+            arg_type = f'{module}.{arg.__class__.__name__}'
             return arg_type, arg.serialize(self)
         return 'value', arg
 
@@ -134,10 +134,7 @@ class DictionarySerializer(Serializer):
             return arg
         arg_cls = get_class(arg_type)
         ret = arg_cls.deserialize(self, arg)
-        if isinstance(ret,list):
-            return arg_cls(*ret)
-        else:
-            return ret
+        return arg_cls(*ret) if isinstance(ret,list) else ret
 
     def serialize_task_spec(self, spec):
         s_state = dict(name=spec.name,
@@ -145,7 +142,7 @@ class DictionarySerializer(Serializer):
                        manual=spec.manual,
                        lookahead=spec.lookahead)
         module_name = spec.__class__.__module__
-        s_state['class'] = module_name + '.' + spec.__class__.__name__
+        s_state['class'] = f'{module_name}.{spec.__class__.__name__}'
         s_state['inputs'] = [t.name for t in spec.inputs]
         s_state['outputs'] = [t.name for t in spec.outputs]
         s_state['data'] = self.serialize_dict(spec.data)
@@ -431,10 +428,9 @@ class DictionarySerializer(Serializer):
 
     def serialize_workflow_spec(self, spec, **kwargs):
         s_state = dict(name=spec.name, description=spec.description, file=spec.file)
-        s_state['task_specs'] = dict(
-            (k, v.serialize(self))
-            for k, v in list(spec.task_specs.items())
-        )
+        s_state['task_specs'] = {
+            k: v.serialize(self) for k, v in list(spec.task_specs.items())
+        }
         return s_state
 
     def _deserialize_workflow_spec_task_spec(self, spec, task_spec, name):
@@ -470,7 +466,7 @@ class DictionarySerializer(Serializer):
     def serialize_workflow(self, workflow, include_spec=True, **kwargs):
 
         assert isinstance(workflow, Workflow)
-        s_state = dict()
+        s_state = {}
         if include_spec:
             s_state['wf_spec'] = self.serialize_workflow_spec(workflow.spec, **kwargs)
 
@@ -524,9 +520,10 @@ class DictionarySerializer(Serializer):
             raise TaskNotSupportedError(
                 "Subworkflow tasks cannot be serialized (due to their use of" +
                 " internal_data to store the subworkflow).")
-        s_state = dict()
-        s_state['id'] = task.id
-        s_state['parent'] = task.parent.id if task.parent is not None else None
+        s_state = {
+            'id': task.id,
+            'parent': task.parent.id if task.parent is not None else None,
+        }
         if not skip_children:
             s_state['children'] = [self.serialize_task(child) for child in task.children]
         s_state['state'] = task.state
@@ -544,7 +541,7 @@ class DictionarySerializer(Serializer):
             return None
         task_spec = workflow.spec.get_task_spec_from_name(old_spec_name)
         if task_spec is None:
-            raise MissingSpecError("Unknown task spec: " + old_spec_name)
+            raise MissingSpecError(f"Unknown task spec: {old_spec_name}")
         task = Task(workflow, task_spec)
 
         task.id = s_state['id']

@@ -33,14 +33,15 @@ class NIMessageBoundaryTest(BaseTestCase):
         # question
         answers = {'Activity_WorkLate':('flag_task','No'),
                    'Activity_DoWork': ('work_done','No')}
-        for x in range(3):
+        for _ in range(3):
             ready_tasks = self.workflow.get_tasks(TaskState.READY)
             for task in ready_tasks:
                 response = answers.get(task.task_spec.name,None)
-                self.assertEqual(response is None,
-                                 False,
-                                 'We got a ready task that we did not expect - %s'%(
-                                 task.task_spec.name))
+                self.assertEqual(
+                    response is None,
+                    False,
+                    f'We got a ready task that we did not expect - {task.task_spec.name}',
+                )
                 task.data[response[0]] = response[1]
                 self.workflow.run_task_from_id(task.id)
                 self.workflow.do_engine_steps()
@@ -54,14 +55,15 @@ class NIMessageBoundaryTest(BaseTestCase):
         answers = {'Activity_WorkLate':('flag_task','Yes'),
                    'Activity_DoWork': ('work_done','No'),
                    'Activity_WorkLateReason':('work_late_reason','covid-19')}
-        for x in range(3):
+        for _ in range(3):
             ready_tasks = self.workflow.get_tasks(TaskState.READY)
             for task in ready_tasks:
                 response = answers.get(task.task_spec.name,None)
-                self.assertEqual(response is None,
-                                 False,
-                                 'We got a ready task that we did not expect - %s'%(
-                                 task.task_spec.name))
+                self.assertEqual(
+                    response is None,
+                    False,
+                    f'We got a ready task that we did not expect - {task.task_spec.name}',
+                )
                 task.data[response[0]] = response[1]
                 self.workflow.run_task_from_id(task.id)
                 self.workflow.do_engine_steps()

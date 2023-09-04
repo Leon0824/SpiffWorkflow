@@ -63,7 +63,10 @@ def remove_boundary_event_parent(dct):
         for task in wf['tasks'].values():
             if task['task_spec'].endswith('BoundaryEventParent'):
                 task['task_spec'] = task['task_spec'].replace('BoundaryEventParent', 'BoundaryEventSplit')
-                completed = all([ wf['tasks'][child]['state'] in [64, 256] for child in task['children'] ])
+                completed = all(
+                    wf['tasks'][child]['state'] in [64, 256]
+                    for child in task['children']
+                )
                 for child in task['children']:
                     child_task = wf['tasks'][child]
                     if child_task['state'] < 8:
@@ -94,7 +97,7 @@ def remove_boundary_event_parent(dct):
                     }
                     child_task['children'].append(new_task['id'])
                     new_tasks[new_task['id']] = new_task
-        
+
         wf['tasks'].update(new_tasks)
 
     update_specs(dct['spec'])

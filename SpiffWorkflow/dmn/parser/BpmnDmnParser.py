@@ -50,8 +50,10 @@ class BpmnDmnParser(BpmnParser):
         if decision_ref not in self.dmn_parsers:
             options = ', '.join(list(self.dmn_parsers.keys()))
             raise ValidationException(
-                'No DMN Diagram available with id "%s", Available DMN ids are: %s' %(decision_ref, options),
-                node=node, file_name='')
+                f'No DMN Diagram available with id "{decision_ref}", Available DMN ids are: {options}',
+                node=node,
+                file_name='',
+            )
         dmn_parser = self.dmn_parsers[decision_ref]
         dmn_parser.parse()
         decision = dmn_parser.decision

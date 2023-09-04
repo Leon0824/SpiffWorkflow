@@ -68,7 +68,9 @@ class StandardLoopTask(LoopTask):
         info['iterations_completed'] = len(self._merged_children(my_task))
         if self.maximum:
             info['iterations_remaining'] = self.maximum - info['iterations_completed']
-        info['instance_map'] = dict((idx, str(t.id)) for idx, t in enumerate(self._instances(my_task)))
+        info['instance_map'] = {
+            idx: str(t.id) for idx, t in enumerate(self._instances(my_task))
+        }
         return info
 
     def _update_hook(self, my_task):
@@ -76,8 +78,7 @@ class StandardLoopTask(LoopTask):
         if my_task.state != TaskState.WAITING:
             super()._update_hook(my_task)
 
-        child_running = self.process_children(my_task)
-        if child_running:
+        if child_running := self.process_children(my_task):
             # We're in the middle of an iteration; we're not done and we can't create a new task
             return False
         elif self.loop_complete(my_task):
@@ -102,10 +103,9 @@ class StandardLoopTask(LoopTask):
             # "test before" isn't really compatible our execution model in a transparent way
             # This guarantees that the task will run at least once if test_before is False
             return False
-        else:
-            max_complete = self.maximum is not None and len(merged) >= self.maximum
-            cond_complete = self.condition is not None and my_task.workflow.script_engine.evaluate(my_task, self.condition)
-            return max_complete or cond_complete
+        max_complete = self.maximum is not None and len(merged) >= self.maximum
+        cond_complete = self.condition is not None and my_task.workflow.script_engine.evaluate(my_task, self.condition)
+        return max_complete or cond_complete
 
 
 class MultiInstanceTask(LoopTask):
@@ -188,17 +188,7 @@ class MultiInstanceTask(LoopTask):
     def init_data_output_with_input_data(self, my_task, input_data):
 
         name = self.data_output.bpmn_id
-        if name not in my_task.data:
-            if isinstance(input_data, (MutableMapping, MutableSequence)):
-                # We can use the same class if it implements __setitem__
-                my_task.data[name] = input_data.__class__()
-            elif isinstance(input_data, Mapping):
-                # If we have a map without __setitem__, use a dict
-                my_task.data[name] = dict()
-            else:
-                # For all other types, we'll append to a list
-                my_task.data[name] = list()
-        else:
+        if name in my_task.data:
             output_data = my_task.data[self.data_output.bpmn_id]
             if not isinstance(output_data, (MutableSequence, MutableMapping)):
                 self.raise_data_exception("Only a mutable map (dict) or sequence (list) can be used for output", my_task)
@@ -206,11 +196,21 @@ class MultiInstanceTask(LoopTask):
                 self.raise_data_exception(
                     "If the input is not being updated in place, the output must be empty or it must be a map (dict)", my_task)
 
+        elif isinstance(input_data, (MutableMapping, MutableSequence)):
+            # We can use the same class if it implements __setitem__
+            my_task.data[name] = input_data.__class__()
+        elif isinstance(input_data, Mapping):
+                # If we have a map without __setitem__, use a dict
+            my_task.data[name] = {}
+        else:
+                # For all other types, we'll append to a list
+            my_task.data[name] = []
+
     def init_data_output_with_cardinality(self, my_task):
 
         name = self.data_output.bpmn_id
         if name not in my_task.data:
-            my_task.data[name] = list()
+            my_task.data[name] = []
         elif not isinstance(my_task.data[name], MutableMapping) and len(my_task.data[name]) > 0:
             self.raise_data_exception(
                 "If loop cardinality is specificied, the output must be a map (dict) or empty sequence (list)",
@@ -228,8 +228,7 @@ class SequentialMultiInstanceTask(MultiInstanceTask):
         if my_task.state != TaskState.WAITING:
             super()._update_hook(my_task)
 
-        child_running = self.process_children(my_task)
-        if child_running:
+        if child_running := self.process_children(my_task):
             return False
         if self.condition is not None and self.check_completion_condition(my_task):
             return True
@@ -240,7 +239,9 @@ class SequentialMultiInstanceTask(MultiInstanceTask):
         info = super().task_info(my_task)
         cardinality = my_task.internal_data.get('cardinality')
         if cardinality is not None:
-            info['future'] = [v for v in range(len(info['completed']) + len(info['running']), cardinality)]
+            info['future'] = list(
+                range(len(info['completed']) + len(info['running']), cardinality)
+            )
         return info
 
     def add_next_child(self, my_task):
@@ -267,17 +268,15 @@ class SequentialMultiInstanceTask(MultiInstanceTask):
             if self.data_output is not None:
                 self.init_data_output_with_input_data(my_task, input_data)
 
-        if len(remaining) > 0:
-            if isinstance(input_data, (Mapping, Sequence)):
-                # In this case, we want to preserve a key or index
-                # We definitely need it if the output is a map, or if we're udpating a sequence in place
-                key_or_index, item = remaining[0], input_data[remaining[0]]
-            else:
-                key_or_index, item = None, remaining[0]
-            my_task.internal_data['remaining'] = remaining[1:]
-            return key_or_index, item
-        else:
+        if len(remaining) <= 0:
             return None, None
+        key_or_index, item = (
+            (remaining[0], input_data[remaining[0]])
+            if isinstance(input_data, (Mapping, Sequence))
+            else (None, remaining[0])
+        )
+        my_task.internal_data['remaining'] = remaining[1:]
+        return key_or_index, item
 
     def init_remaining_items(self, my_task):
 
@@ -288,13 +287,10 @@ class SequentialMultiInstanceTask(MultiInstanceTask):
         # This is internal bookkeeping, so we know where we are; we get the actual items when we create the task
         if isinstance(input_data, Sequence):
             # For lists, keep track of the index
-            remaining = [idx for idx in range(len(input_data))]
-        elif isinstance(input_data, Mapping):
+            remaining = list(range(len(input_data)))
+        elif isinstance(input_data, (Mapping, Iterable)):
             # For dicts, use the keys
-            remaining = [key for key in input_data]
-        elif isinstance(input_data, Iterable):
-            # Otherwise, just copy the objects as a last resort
-            remaining = [val for val in input_data]
+            remaining = list(input_data)
         else:
             self.raise_data_exception("Multiinstance data input must be iterable", my_task)
         return remaining
@@ -340,32 +336,28 @@ class ParallelMultiInstanceTask(MultiInstanceTask):
     def create_children(self, my_task):
 
         data_input = my_task.data[self.data_input.bpmn_id] if self.data_input is not None else None
-        if data_input is not None:
-            # We have to preserve the key or index for maps/sequences, in case we're updating in place, or the output is a mapping
-            if isinstance(data_input, Mapping):
-                children = data_input.items()
-            elif isinstance(data_input, Sequence):
-                children = enumerate(data_input)
-            else:
-                # We can use other iterables as inputs, but key or index isn't meaningful
-                children = ((None, item) for item in data_input)
-        else:
+        if data_input is None:
             # For tasks specifying the cardinality, use the index as the "item"
             cardinality = my_task.workflow.script_engine.evaluate(my_task, self.cardinality)
             children = ((idx, idx) for idx in range(cardinality))
 
-        if not my_task.internal_data.get('started', False):
-
-            if self.data_output is not None:
-                if self.data_input is not None:
-                    self.init_data_output_with_input_data(my_task, my_task.data[self.data_input.bpmn_id])
-                else:
-                    self.init_data_output_with_cardinality(my_task)
-
-            my_task._set_state(TaskState.WAITING)
-            for key_or_index, item in children:
-                self.create_child(my_task, item, key_or_index)
-
-            my_task.internal_data['started'] = True
+        elif isinstance(data_input, Mapping):
+            children = data_input.items()
+        elif isinstance(data_input, Sequence):
+            children = enumerate(data_input)
         else:
+            # We can use other iterables as inputs, but key or index isn't meaningful
+            children = ((None, item) for item in data_input)
+        if my_task.internal_data.get('started', False):
             return len(self._merged_children(my_task)) == len(children)
+        if self.data_output is not None:
+            if self.data_input is not None:
+                self.init_data_output_with_input_data(my_task, my_task.data[self.data_input.bpmn_id])
+            else:
+                self.init_data_output_with_cardinality(my_task)
+
+        my_task._set_state(TaskState.WAITING)
+        for key_or_index, item in children:
+            self.create_child(my_task, item, key_or_index)
+
+        my_task.internal_data['started'] = True

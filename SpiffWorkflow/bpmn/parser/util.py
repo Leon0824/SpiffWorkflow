@@ -43,10 +43,7 @@ def first(nodes):
     """
     Return the first node in the given list, or None, if the list is empty.
     """
-    if len(nodes) >= 1:
-        return nodes[0]
-    else:
-        return None
+    return nodes[0] if len(nodes) >= 1 else None
 
 
 def xpath_eval(node, extra_ns=None):

@@ -113,14 +113,14 @@ class TaskParser(NodeParser):
 
         loop_input = loop_input[0].text if len(loop_input) > 0 else None
         if loop_input is not None:
-            if self.task.io_specification is not None:
+            if self.task.io_specification is None:
+                loop_input = TaskDataReference(loop_input)
+
+            else:
                 try:
                     loop_input = [v for v in self.task.io_specification.data_inputs if v.name == loop_input][0]
                 except Exception:
                     self.raise_validation_exception('The loop input data reference is missing from the IO specification')
-            else:
-                loop_input = TaskDataReference(loop_input)
-
         input_item = self.xpath(f'./{prefix}/bpmn:inputDataItem')
         input_item = self.create_data_spec(input_item[0], TaskDataReference) if len(input_item) > 0 else None
 
@@ -200,21 +200,24 @@ class TaskParser(NodeParser):
             if len(mi_loop_characteristics) > 0:
                 self._add_multiinstance_task(mi_loop_characteristics[0])
 
-            boundary_event_nodes = self.doc_xpath('.//bpmn:boundaryEvent[@attachedToRef="%s"]' % self.bpmn_id)
+            boundary_event_nodes = self.doc_xpath(
+                f'.//bpmn:boundaryEvent[@attachedToRef="{self.bpmn_id}"]'
+            )
             if boundary_event_nodes:
                 parent = self._add_boundary_event(boundary_event_nodes)
 
-            children = []
-            outgoing = self.doc_xpath('.//bpmn:sequenceFlow[@sourceRef="%s"]' % self.bpmn_id)
+            outgoing = self.doc_xpath(f'.//bpmn:sequenceFlow[@sourceRef="{self.bpmn_id}"]')
             if len(outgoing) > 1 and not self.handles_multiple_outgoing():
                 self.raise_validation_exception('Multiple outgoing flows are not supported for tasks of type')
+            children = []
             for sequence_flow in outgoing:
                 target_ref = sequence_flow.get('targetRef')
                 try:
-                    target_node = one(self.doc_xpath('.//bpmn:*[@id="%s"]'% target_ref))
+                    target_node = one(self.doc_xpath(f'.//bpmn:*[@id="{target_ref}"]'))
                 except Exception:
-                    self.raise_validation_exception('When looking for a task spec, we found two items, '
-                        'perhaps a form has the same ID? (%s)' % target_ref)
+                    self.raise_validation_exception(
+                        f'When looking for a task spec, we found two items, perhaps a form has the same ID? ({target_ref})'
+                    )
 
                 split_task = self.spec.task_specs.get(f'{target_ref}.BoundaryEventSplit')
                 c = self.process_parser.parse_node(target_node) if split_task is None else split_task

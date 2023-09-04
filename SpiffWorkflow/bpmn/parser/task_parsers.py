@@ -81,13 +81,13 @@ class SubprocessParser:
     @staticmethod
     def get_call_activity_spec(task_parser):
 
-        called_element = task_parser.node.get('calledElement', None)
-        if not called_element:
+        if called_element := task_parser.node.get('calledElement', None):
+            return called_element
+        else:
             raise ValidationException(
                 'No "calledElement" attribute for Call Activity.',
                 node=task_parser.node,
                 file_name=task_parser.filename)
-        return called_element
 
 
 class SubWorkflowParser(TaskParser):
@@ -121,6 +121,8 @@ class ScriptTaskParser(TaskParser):
             return one(self.xpath('.//bpmn:script')).text
         except AssertionError as ae:
             raise ValidationException(
-                "Invalid Script Task.  No Script Provided. " + str(ae),
-                node=self.node, file_name=self.filename)
+                f"Invalid Script Task.  No Script Provided. {str(ae)}",
+                node=self.node,
+                file_name=self.filename,
+            )
 

@@ -134,5 +134,5 @@ class ThreadMerge(Join):
         return serializer.serialize_thread_merge(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_thread_merge(wf_spec, s_state)

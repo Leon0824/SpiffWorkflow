@@ -77,9 +77,12 @@ class BoundaryEventJoin(Join, BpmnTaskSpec):
                 noninterrupting.append(task)
 
         if main is None:
-            raise WorkflowException(f'No main task found', task_spec=self)
+            raise WorkflowException('No main task found', task_spec=self)
 
-        interrupt = any([t._has_state(TaskState.READY|TaskState.COMPLETED) for t in interrupting])
+        interrupt = any(
+            t._has_state(TaskState.READY | TaskState.COMPLETED)
+            for t in interrupting
+        )
         finished = main._is_finished() or interrupt
         if finished:
             cancel = [t for t in interrupting + noninterrupting if t.state == TaskState.WAITING]
@@ -103,7 +106,7 @@ class _EndJoin(UnstructuredJoin, BpmnTaskSpec):
                 continue
             waiting_tasks.append(task)
 
-        return force or len(waiting_tasks) == 0, waiting_tasks
+        return force or not waiting_tasks, waiting_tasks
 
     def _run_hook(self, my_task):
         result = super(_EndJoin, self)._run_hook(my_task)

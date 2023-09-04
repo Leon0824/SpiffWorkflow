@@ -41,5 +41,5 @@ class CancelTask(Trigger):
         return serializer.serialize_cancel_task(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_cancel_task(wf_spec, s_state)

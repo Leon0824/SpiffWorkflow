@@ -43,7 +43,7 @@ class ParallelGateway(UnstructuredJoin):
     """
     def _check_threshold_unstructured(self, my_task, force=False):
 
-        tasks = my_task.workflow.get_tasks_from_spec_name(self.name)    
+        tasks = my_task.workflow.get_tasks_from_spec_name(self.name)
         # Look up which tasks have parents completed.
         waiting_tasks = []
         waiting_inputs = set(self.inputs)
@@ -65,4 +65,4 @@ class ParallelGateway(UnstructuredJoin):
             elif task.parent._has_state(TaskState.DEFINITE_MASK):
                 waiting_tasks.append(task.parent)
 
-        return force or len(waiting_inputs) == 0, waiting_tasks
+        return force or not waiting_inputs, waiting_tasks

@@ -96,7 +96,7 @@ class DMNParser(NodeParser):
 
     def _parse_decision(self, root):
         decision_elements = list(root)
-        if len(decision_elements) == 0:
+        if not decision_elements:
             raise ValidationException('No decisions found', file_name=self.filename,
                                       node=root)
 
@@ -162,11 +162,12 @@ class DMNParser(NodeParser):
                      type_ref)
 
     def _parse_output(self, outputElement):
-        output = Output(outputElement.attrib['id'],
-                        outputElement.attrib.get('label', ''),
-                        outputElement.attrib.get('name', ''),
-                        outputElement.attrib.get('typeRef', ''))
-        return output
+        return Output(
+            outputElement.attrib['id'],
+            outputElement.attrib.get('label', ''),
+            outputElement.attrib.get('name', ''),
+            outputElement.attrib.get('typeRef', ''),
+        )
 
     def _parse_rule(self, decisionTable, ruleElement, rowNumber):
         rule = Rule(ruleElement.attrib['id'])
@@ -215,6 +216,8 @@ class DMNParser(NodeParser):
                     ast.parse(entry.text)
                 except Exception as e:
                     raise ValidationException(
-                        "Malformed Output Expression '%s'. %s " % (entry.text, str(e)),
-                        node=element, file_name=self.filename)
+                        f"Malformed Output Expression '{entry.text}'. {str(e)} ",
+                        node=element,
+                        file_name=self.filename,
+                    )
         return entry

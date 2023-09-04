@@ -115,12 +115,20 @@ class NodeParser:
             data_refs[ref.bpmn_id] = ref
 
         inputs, outputs = [], []
-        for ref in self.xpath('./bpmn:ioSpecification/bpmn:inputSet/bpmn:dataInputRefs'):
-            if ref.text in data_refs:
-                inputs.append(data_refs[ref.text])
-        for ref in self.xpath('./bpmn:ioSpecification/bpmn:outputSet/bpmn:dataOutputRefs'):
-            if ref.text in data_refs:
-                outputs.append(data_refs[ref.text])
+        inputs.extend(
+            data_refs[ref.text]
+            for ref in self.xpath(
+                './bpmn:ioSpecification/bpmn:inputSet/bpmn:dataInputRefs'
+            )
+            if ref.text in data_refs
+        )
+        outputs.extend(
+            data_refs[ref.text]
+            for ref in self.xpath(
+                './bpmn:ioSpecification/bpmn:outputSet/bpmn:dataOutputRefs'
+            )
+            if ref.text in data_refs
+        )
         return BpmnIoSpecification(inputs, outputs)
 
     def create_data_spec(self, item, cls):

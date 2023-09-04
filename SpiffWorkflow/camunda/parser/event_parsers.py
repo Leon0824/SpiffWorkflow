@@ -34,9 +34,8 @@ class CamundaEventDefinitionParser(EventDefinitionParser):
     def parse_message_event(self, message_event):
         """Parse a Camunda message event node."""
 
-        message_ref = message_event.get('messageRef')
-        if message_ref:
-            message = one(self.doc_xpath('.//bpmn:message[@id="%s"]' % message_ref))
+        if message_ref := message_event.get('messageRef'):
+            message = one(self.doc_xpath(f'.//bpmn:message[@id="{message_ref}"]'))
             name = message.get('name')
             correlations = self.get_message_correlations(message_ref)
         else:

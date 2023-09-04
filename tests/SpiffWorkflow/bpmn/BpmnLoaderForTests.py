@@ -37,7 +37,7 @@ class TestExclusiveGatewayParser(ConditionalGatewayParser):
         cond = super().parse_condition(sequence_flow_node)
         if cond is not None:
             return cond
-        return "choice == '%s'" % sequence_flow_node.get('name', None)
+        return f"choice == '{sequence_flow_node.get('name', None)}'"
 
 class TestUserTaskConverter(TaskSpecConverter):
 
@@ -45,8 +45,7 @@ class TestUserTaskConverter(TaskSpecConverter):
         super().__init__(TestUserTask, data_converter)
 
     def to_dict(self, spec):
-        dct = self.get_default_attributes(spec)
-        return dct
+        return self.get_default_attributes(spec)
 
     def from_dict(self, dct):
         return self.task_spec_from_dict(dct)

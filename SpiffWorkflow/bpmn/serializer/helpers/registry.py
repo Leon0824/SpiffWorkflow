@@ -46,7 +46,7 @@ class DefaultRegistry(DictionaryConverter):
         # This removes functions and other callables from task data.
         # By default we don't want to serialize these
         if isinstance(obj, dict):
-            items = [ (k, v) for k, v in obj.items() ]
+            items = list(obj.items())
             for key, value in items:
                 if callable(value):
                     del obj[key]

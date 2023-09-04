@@ -58,7 +58,7 @@ class UnstructuredJoin(Join):
         thread_tasks.sort(key=lambda t: t.parent.last_state_change)
         collected_data = {}
         for task in thread_tasks:
-            collected_data.update(task.data)
+            collected_data |= task.data
 
         for task in thread_tasks:
             if task != last_changed:

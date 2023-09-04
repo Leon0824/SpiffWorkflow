@@ -22,11 +22,7 @@ class MultipleEventDefinition(EventDefinition):
                     if event_definition.catches(my_task, event) and event_definition in event_definitions:
                         event_definitions.remove(event_definition)
 
-        if self.parallel:
-            # Parallel multiple need to match all events
-            return len(event_definitions) == 0
-        else:
-            return len(seen_events) > 0
+        return not event_definitions if self.parallel else len(seen_events) > 0
 
     def catch(self, my_task, event=None):
         event.event_definition.catch(my_task, event)
@@ -38,11 +34,7 @@ class MultipleEventDefinition(EventDefinition):
         super().reset(my_task)
 
     def __eq__(self, other):
-        # This event can catch any of the events associated with it
-        for event in self.event_definitions:
-            if event == other:
-                return True
-        return False
+        return any(event == other for event in self.event_definitions)
 
     def throw(self, my_task):
         # Mutiple events throw all associated events when they fire

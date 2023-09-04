@@ -343,7 +343,7 @@ class BpmnParser(object):
     def find_all_specs(self):
         # This is a little convoluted, but we might add more processes as we generate
         # the dictionary if something refers to another subprocess that we haven't seen.
-        processes = dict((id, self.get_spec(id)) for id in self.get_process_ids())
+        processes = {id: self.get_spec(id) for id in self.get_process_ids()}
         while processes.keys() != self.process_parsers.keys():
             for process_id in self.process_parsers.keys():
                 processes[process_id] = self.get_spec(process_id)
@@ -365,7 +365,7 @@ class BpmnParser(object):
             if process_parser and process_parser.process_executable:
                 sp_spec = self.get_spec(process)
                 subprocesses[process] = sp_spec
-                subprocesses.update(self.get_subprocess_specs(process))
+                subprocesses |= self.get_subprocess_specs(process)
                 if len([s for s in sp_spec.task_specs.values() if 
                         isinstance(s, StartEventMixin) and 
                         isinstance(s.event_definition, (NoneEventDefinition, TimerEventDefinition))

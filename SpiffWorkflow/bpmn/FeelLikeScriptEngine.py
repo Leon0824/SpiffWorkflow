@@ -46,10 +46,7 @@ class FeelInterval():
             lhs = other > self.startInterval
         else:
             lhs = other >= self.startInterval
-        if self.rightOpen:
-            rhs = other < self.endInterval
-        else:
-            rhs = other <= self.endInterval
+        rhs = other < self.endInterval if self.rightOpen else other <= self.endInterval
         return lhs and rhs
 
 class FeelContains():
@@ -62,20 +59,14 @@ class FeelContains():
             has = self.test in list(other.keys())
         else:
             has = self.test in list(other)
-        if self.invert:
-            return not has
-        else:
-            return has
+        return not has if self.invert else has
 
 class FeelNot():
     def __init__(self, testItem):
         self.test = testItem
 
     def __eq__(self, other):
-        if other == self.test:
-            return False
-        else:
-            return True
+        return other != self.test
 
 def feelConcatenate(*lst):
     ilist = []
@@ -100,17 +91,10 @@ def feelGregorianDOW(date):
 
 
 def transformDuration(duration,td):
-    if duration:
-        return td * float(duration)
-    else:
-        return timedelta(seconds=0)
+    return td * float(duration) if duration else timedelta(seconds=0)
 
 def lookupPart(code,base):
-    x= re.search("([0-9.]+)"+code,base)
-    if x:
-        return x.group(1)
-    else:
-        return None
+    return x.group(1) if (x := re.search(f"([0-9.]+){code}", base)) else None
 
 def feelFilter(var,a,b,op,column=None):
     """

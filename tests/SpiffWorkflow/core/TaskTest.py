@@ -58,19 +58,17 @@ class TaskTest(unittest.TestCase):
                         'Expected:\n' + repr(expected.pattern) + '\n' +
                         'but got:\n' + repr(root.get_dump()))
 
-        # Now remove one line from the expected output for testing the
-        # filtered iterator.
-        expected2 = ''
-        for line in expected.pattern.split('\n'):
-            if line.find('Simple 9') >= 0:
-                continue
-            expected2 += line.lstrip() + '\n'
+        expected2 = ''.join(
+            line.lstrip() + '\n'
+            for line in expected.pattern.split('\n')
+            if line.find('Simple 9') < 0
+        )
         expected2 = re.compile(expected2)
 
-        # Run the iterator test.
-        result = ''
-        for thetask in Task.Iterator(root, TaskState.MAYBE):
-            result += thetask.get_dump(0, False) + '\n'
+        result = ''.join(
+            thetask.get_dump(0, False) + '\n'
+            for thetask in Task.Iterator(root, TaskState.MAYBE)
+        )
         self.assertTrue(expected2.match(result),
                         'Expected:\n' + repr(expected2.pattern) + '\n' +
                         'but got:\n' + repr(result))

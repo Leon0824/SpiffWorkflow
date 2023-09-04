@@ -6,7 +6,7 @@ from SpiffWorkflow.specs.SubWorkflow import SubWorkflow
 
 
 def on_reached_cb(workflow, task, taken_path):
-    reached_key = "%s_reached" % str(task.get_name())
+    reached_key = f"{str(task.get_name())}_reached"
     n_reached = task.get_data(reached_key, 0) + 1
     task.set_data(**{reached_key:       n_reached,
                      'two':             2,
@@ -27,23 +27,22 @@ def on_reached_cb(workflow, task, taken_path):
             continue
         atts.append('='.join((key, str(value))))
 
-    # Collect a list of all task data.
-    props = []
-    for key, value in list(task.task_spec.data.items()):
-        props.append('='.join((key, str(value))))
-
+    props = [
+        '='.join((key, str(value)))
+        for key, value in list(task.task_spec.data.items())
+    ]
     # Store the list of data in the workflow.
     atts = ';'.join(atts)
     props = ';'.join(props)
     old = task.get_data('data', '')
-    data = task.get_name() + ': ' + atts + '/' + props + '\n'
+    data = f'{task.get_name()}: {atts}/{props}' + '\n'
     task.set_data(data=old + data)
     return True
 
 def on_complete_cb(workflow, task, taken_path):
     # Record the path.
     indent = '  ' * task._get_depth()
-    taken_path.append('%s%s' % (indent, task.get_name()))
+    taken_path.append(f'{indent}{task.get_name()}')
     # In workflows that load a subworkflow, the newly loaded children
     # will not have on_reached_cb() assigned. By using this function, we
     # re-assign the function in every step, thus making sure that new
@@ -90,7 +89,7 @@ def run_workflow(test, wf_spec, expected_path, expected_data, workflow=None):
     try:
         # We allow the workflow to require a maximum of 5 seconds to
         # complete, to allow for testing long running tasks.
-        for i in range(10):
+        for _ in range(10):
             workflow.run_all(False)
             if workflow.is_completed():
                 break

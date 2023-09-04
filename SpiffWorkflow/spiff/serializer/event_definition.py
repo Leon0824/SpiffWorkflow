@@ -40,8 +40,7 @@ class MessageEventDefinitionConverter(EventDefinitionConverter):
 
     def from_dict(self, dct):
         dct['correlation_properties'] = self.correlation_properties_from_dict(dct['correlation_properties'])
-        event_definition = super().from_dict(dct)
-        return event_definition
+        return super().from_dict(dct)
 
 
 class ItemAwareEventDefinitionConverter(EventDefinitionConverter):
