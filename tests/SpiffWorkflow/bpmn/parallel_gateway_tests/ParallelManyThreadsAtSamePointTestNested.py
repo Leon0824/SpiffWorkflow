@@ -20,16 +20,17 @@ class ParallelManyThreadsAtSamePointTestNested(BaseParallelTestCase):
         for split1 in ['SP 1', 'SP 2']:
             for sp in ['A', 'B']:
                 for split2 in ['1', '2']:
-                    for t in ['A', 'B']:
-                        instructions.append(split1 + sp + "|" + split2 + t)
-                    instructions.append(split1 + sp + "|" + 'Inner Done')
-                    instructions.append("!" + split1 + sp + "|" + 'Inner Done')
+                    instructions.extend(split1 + sp + "|" + split2 + t for t in ['A', 'B'])
+                    instructions.extend(
+                        (
+                            split1 + sp + "|" + 'Inner Done',
+                            f"!{split1}{sp}|Inner Done",
+                        )
+                    )
                 if sp == 'A':
                     instructions.append("!Outer Done")
 
-            instructions.append('Outer Done')
-            instructions.append("!Outer Done")
-
+            instructions.extend(('Outer Done', "!Outer Done"))
         logging.info('Doing test with instructions: %s', instructions)
         self._do_test(instructions, only_one_instance=False, save_restore=True)
 
@@ -38,15 +39,16 @@ class ParallelManyThreadsAtSamePointTestNested(BaseParallelTestCase):
         for t in ['A', 'B']:
             for split2 in ['1', '2']:
                 for sp in ['A', 'B']:
-                    for split1 in ['SP 1', 'SP 2']:
-                        instructions.append(split1 + sp + "|" + split2 + t)
-
+                    instructions.extend(
+                        split1 + sp + "|" + split2 + t
+                        for split1 in ['SP 1', 'SP 2']
+                    )
         for split1 in ['SP 1', 'SP 2']:
             for sp in ['A', 'B']:
-                for split2 in ['1', '2']:
+                for _ in ['1', '2']:
                     instructions += [split1 + sp + "|" + 'Inner Done']
 
-        for split1 in ['SP 1', 'SP 2']:
+        for _ in ['SP 1', 'SP 2']:
             instructions += ['Outer Done']
 
         logging.info('Doing test with instructions: %s', instructions)

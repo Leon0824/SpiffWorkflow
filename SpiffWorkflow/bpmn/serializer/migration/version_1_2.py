@@ -86,13 +86,14 @@ def convert_timer_expressions(dct):
 
     def has_timer(ts):
         return "event_definition" in ts and ts["event_definition"]["typename"] in ["CycleTimerEventDefinition", "TimerEventDefinition"]
+
     for spec in [ ts for ts in dct['spec']['task_specs'].values() if has_timer(ts) ]:
         spec['event_definition']['name'] = spec['event_definition'].pop('label')
         if spec['event_definition']['typename'] == 'TimerEventDefinition':
             convert_timedate(spec)
         if spec['event_definition']['typename'] == 'CycleTimerEventDefinition':
             tasks = [ t for t in dct['tasks'].values() if t['task_spec'] == spec['name'] ]
-            task = tasks[0] if len(tasks) > 0 else None
+            task = tasks[0] if tasks else None
             convert_cycle(spec, task)
 
 def add_default_condition_to_cond_task_specs(dct):
@@ -134,8 +135,11 @@ def create_data_objects_and_io_specs(dct):
 
 def check_multiinstance(dct):
 
-    specs = [ spec for spec in dct['spec']['task_specs'].values() if 'prevtaskclass' in spec ]
-    if len(specs) > 0:
+    if specs := [
+        spec
+        for spec in dct['spec']['task_specs'].values()
+        if 'prevtaskclass' in spec
+    ]:
         raise VersionMigrationError("This workflow cannot be migrated because it contains MultiInstance Tasks")
 
 def remove_loop_reset(dct):

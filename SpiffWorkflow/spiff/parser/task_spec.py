@@ -73,10 +73,10 @@ class SpiffTaskParser(TaskParser):
     @classmethod
     def _parse_properties(cls, node):
         property_nodes = cls._node_children_by_tag_name(node, 'property')
-        properties = {}
-        for prop_node in property_nodes:
-            properties[prop_node.attrib['name']] = prop_node.attrib['value']
-        return properties
+        return {
+            prop_node.attrib['name']: prop_node.attrib['value']
+            for prop_node in property_nodes
+        }
 
     @staticmethod
     def _spiffworkflow_ready_xpath_for_node(node):
@@ -88,8 +88,12 @@ class SpiffTaskParser(TaskParser):
         unit_test_nodes = cls._node_children_by_tag_name(node, 'unitTest')
         unit_tests = []
         for unit_test_node in unit_test_nodes:
-            unit_test_dict = {"id": unit_test_node.attrib['id']}
-            unit_test_dict['inputJson'] = cls._node_children_by_tag_name(unit_test_node, 'inputJson')[0].text
+            unit_test_dict = {
+                "id": unit_test_node.attrib['id'],
+                'inputJson': cls._node_children_by_tag_name(
+                    unit_test_node, 'inputJson'
+                )[0].text,
+            }
             unit_test_dict['expectedOutputJson'] = cls._node_children_by_tag_name(unit_test_node, 'expectedOutputJson')[0].text
             unit_tests.append(unit_test_dict)
         return unit_tests
@@ -100,13 +104,14 @@ class SpiffTaskParser(TaskParser):
         result_variable = node.get('resultVariable', None)
         parameter_nodes = cls._node_children_by_tag_name(node, 'parameter')
         operator = {'name': name, 'resultVariable': result_variable}
-        parameters = {}
-        for param_node in parameter_nodes:
-            if 'value' in param_node.attrib:
-                parameters[param_node.attrib['id']] = {
-                    'value': param_node.attrib['value'],
-                    'type': param_node.attrib['type']
-                }
+        parameters = {
+            param_node.attrib['id']: {
+                'value': param_node.attrib['value'],
+                'type': param_node.attrib['type'],
+            }
+            for param_node in parameter_nodes
+            if 'value' in param_node.attrib
+        }
         operator['parameters'] = parameters
         return operator
 

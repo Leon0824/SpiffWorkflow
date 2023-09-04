@@ -33,11 +33,11 @@ CAMUNDA_MODEL_NS = 'http://camunda.org/schema/1.0/bpmn'
 class CamundaTaskParser(TaskParser):
 
     def parse_extensions(self, node=None):
-        extensions = {}
         extension_nodes = self.xpath('.//bpmn:extensionElements/camunda:properties/camunda:property')
-        for ex_node in extension_nodes:
-            extensions[ex_node.get('name')] = ex_node.get('value')
-        return extensions
+        return {
+            ex_node.get('name'): ex_node.get('value')
+            for ex_node in extension_nodes
+        }
 
     def _add_multiinstance_task(self, loop_characteristics):
 
@@ -180,5 +180,7 @@ class ScriptTaskParser(TaskParser):
             return one(self.xpath('.//bpmn:script')).text
         except AssertionError as ae:
             raise ValidationException(
-                "Invalid Script Task.  No Script Provided. " + str(ae),
-                node=self.node, file_name=self.filename)
+                f"Invalid Script Task.  No Script Provided. {str(ae)}",
+                node=self.node,
+                file_name=self.filename,
+            )

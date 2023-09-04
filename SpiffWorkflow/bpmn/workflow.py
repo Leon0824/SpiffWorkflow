@@ -171,7 +171,7 @@ class BpmnWorkflow(Workflow):
             self.update_collaboration(event)
             tasks = [t for t in self.get_catching_tasks() if t.task_spec.catches(t, event)]
            # Figure out if we need to create an external event
-            if len(tasks) == 0:
+            if not tasks:
                 self.bpmn_events.append(event)
         else:
             catches = lambda t: isinstance(t.task_spec, CatchingEvent) and t.task_spec.catches(t, event)
@@ -186,7 +186,7 @@ class BpmnWorkflow(Workflow):
         """Allows this workflow to catch an externally generated event."""
 
         tasks = [t for t in self.get_catching_tasks() if t.task_spec.catches(t, event)]
-        if len(tasks) == 0:
+        if not tasks:
             raise WorkflowException(f"This process is not waiting for {event.event_definition.name}")
         for task in tasks:
             task.task_spec.catch(task, event)
@@ -302,11 +302,9 @@ class BpmnWorkflow(Workflow):
         wf = workflow or self
         cancelled = Workflow.cancel(wf)
         cancelled_ids = [t.id for t in cancelled]
-        to_cancel = []
-        for sp_id, sp in self.subprocesses.items():
-            if sp_id in cancelled_ids:
-                to_cancel.append(sp)
-        
+        to_cancel = [
+            sp for sp_id, sp in self.subprocesses.items() if sp_id in cancelled_ids
+        ]
         for sp in to_cancel:
             cancelled.extend(self.cancel(sp))
 

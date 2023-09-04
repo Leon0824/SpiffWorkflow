@@ -47,6 +47,4 @@ class ValidationException(SpiffWorkflowException):
     @classmethod
     def _shorten_tag(cls, tag):
         prefix = '{%s}' % BPMN_MODEL_NS
-        if tag.startswith(prefix):
-            return 'bpmn:' + tag[len(prefix):]
-        return tag
+        return f'bpmn:{tag[len(prefix):]}' if tag.startswith(prefix) else tag

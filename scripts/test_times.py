@@ -26,9 +26,8 @@ def regex_line_parser(pattern, handler):
     regex = re.compile(pattern)
     def parser(line):
         match = regex.match(line)
-        if match:
-            return handler(match)
-        return None
+        return handler(match) if match else None
+
     return parser
 
 def rstripped(match):
@@ -66,9 +65,7 @@ def report(parsed_data):
     ]
 
     sorted_data = sorted(parsed_data, key=lambda d: d[1][1], reverse=True)
-    for d in sorted_data:
-        lines.append(f'| {d[0]} | {d[1][1]} | {d[1][0]} |')
-
+    lines.extend(f'| {d[0]} | {d[1][1]} | {d[1][0]} |' for d in sorted_data)
     print('\n'.join(lines))
 
 if __name__ == '__main__':

@@ -31,7 +31,7 @@ class SpiffWorkflowException(Exception):
         self.notes.append(note)
 
     def __str__(self):
-        return super().__str__() + ". " + ". ".join(self.notes)
+        return f"{super().__str__()}. " + ". ".join(self.notes)
 
 
 class WorkflowException(SpiffWorkflowException):

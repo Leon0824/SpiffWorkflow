@@ -176,7 +176,7 @@ class Event(object):
         """
         if self.hard_subscribers is not None:
             for callback, user_args, user_kwargs in self.hard_subscribers:
-                kwargs.update(user_kwargs)
+                kwargs |= user_kwargs
                 result = callback(*args + user_args, **kwargs)
                 if result is not None:
                     return result

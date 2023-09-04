@@ -56,8 +56,7 @@ from .helpers.spec import TaskSpecConverter
 class BpmnTaskSpecConverter(TaskSpecConverter):
 
     def to_dict(self, spec):
-        dct = self.get_default_attributes(spec)
-        return dct
+        return self.get_default_attributes(spec)
 
     def from_dict(self, dct):
         return self.task_spec_from_dict(dct)

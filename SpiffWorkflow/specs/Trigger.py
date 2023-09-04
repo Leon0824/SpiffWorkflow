@@ -82,7 +82,7 @@ class Trigger(TaskSpec):
         :returns: True on success, False otherwise.
         """
         times = int(valueof(my_task, self.times, 1)) + self.queued
-        for i in range(times):
+        for _ in range(times):
             for task_name in self.context:
                 task_spec = my_task.workflow.spec.get_task_spec_from_name(task_name)
                 task_spec._on_trigger(my_task)

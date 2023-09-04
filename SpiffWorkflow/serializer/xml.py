@@ -186,10 +186,7 @@ class XmlSerializer(Serializer):
         return list_elem
 
     def deserialize_value_list(self, elem):
-        thelist = []
-        for value_elem in elem:
-            thelist.append(self.deserialize_value(value_elem))
-        return thelist
+        return [self.deserialize_value(value_elem) for value_elem in elem]
 
     def serialize_operator_equal(self, op):
         """
@@ -563,10 +560,7 @@ class XmlSerializer(Serializer):
     def deserialize_thread_split(self, wf_spec, elem, cls=ThreadSplit,
                                  **kwargs):
         times_elem = elem.find('times')
-        if times_elem is not None:
-            times = self.deserialize_value(times_elem)
-        else:
-            times = 1
+        times = self.deserialize_value(times_elem) if times_elem is not None else 1
         return self.deserialize_task_spec(wf_spec, elem, cls, times=times,
                                           suppress_threadstart_creation=True,
                                           **kwargs)

@@ -173,7 +173,7 @@ class Join(TaskSpec):
         # task that did the conditional parallel split.
         split_task = my_task._find_ancestor_from_name(self.split_task)
         if split_task is None:
-            msg = 'Join with %s, which was not reached' % self.split_task
+            msg = f'Join with {self.split_task}, which was not reached'
             raise WorkflowException(msg, task_spec=self)
         tasks = split_task.task_spec._get_activated_tasks(split_task, my_task)
 
@@ -267,5 +267,5 @@ class Join(TaskSpec):
         return serializer.serialize_join(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_join(wf_spec, s_state)

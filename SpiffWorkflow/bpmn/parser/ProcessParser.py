@@ -58,10 +58,7 @@ class ProcessParser(NodeParser):
     def has_lanes(self) -> bool:
         """Returns true if this process has one or more named lanes """
         elements = self.xpath("//bpmn:lane")
-        for el in elements:
-            if el.get("name"):
-                return True
-        return False
+        return any(el.get("name") for el in elements)
 
     def is_executable(self) -> bool:
         return self.node.get('isExecutable', 'true') == 'true'
@@ -107,8 +104,7 @@ class ProcessParser(NodeParser):
             raise ValidationException("There is no support implemented for this task type.",
                                       node=node, file_name=self.filename)
         np = node_parser(self, spec_class, node, self.nsmap, lane=self.lane)
-        task_spec = np.parse_node()
-        return task_spec
+        return np.parse_node()
 
     def _parse(self):
         # here we only look in the top level, We will have another

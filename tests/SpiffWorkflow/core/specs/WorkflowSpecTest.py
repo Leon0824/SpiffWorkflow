@@ -40,7 +40,7 @@ class WorkflowSpecTest(unittest.TestCase):
         taken_path = track_workflow(workflow.spec)
 
         # Execute a random number of steps.
-        for i in range(randint(0, len(workflow.spec.task_specs))):
+        for _ in range(randint(0, len(workflow.spec.task_specs))):
             workflow.run_next()
 
         # Store the workflow instance in a file.
@@ -64,7 +64,7 @@ class WorkflowSpecTest(unittest.TestCase):
         # Run the rest of the workflow.
         workflow.run_all()
         after = workflow.get_dump()
-        self.assertTrue(workflow.is_completed(), 'Workflow not complete:' + after)
+        self.assertTrue(workflow.is_completed(), f'Workflow not complete:{after}')
         self.assertEqual(expected_path, taken_path)
 
     def testSerialize(self):
@@ -72,12 +72,12 @@ class WorkflowSpecTest(unittest.TestCase):
         xml_file = os.path.join(data_dir, 'workflow1.xml')
         with open(xml_file) as fp:
             xml = etree.parse(fp).getroot()
-        path_file = os.path.splitext(xml_file)[0] + '.path'
+        path_file = f'{os.path.splitext(xml_file)[0]}.path'
         with open(path_file) as fp:
             expected_path = fp.read().strip().split('\n')
         wf_spec = WorkflowSpec.deserialize(serializer, xml)
 
-        for i in range(5):
+        for _ in range(5):
             workflow = Workflow(wf_spec)
             self.doPickleSingle(workflow, expected_path)
 

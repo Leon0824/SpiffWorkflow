@@ -139,12 +139,11 @@ class BpmnWorkflowSerializer:
 
     def __get_dict(self, serialization, use_gzip=False):
         if isinstance(serialization, dict):
-            dct = serialization
+            return serialization
         elif use_gzip:
-            dct = json.loads(gzip.decompress(serialization), cls=self.json_decoder_cls)
+            return json.loads(gzip.decompress(serialization), cls=self.json_decoder_cls)
         else:
-            dct = json.loads(serialization, cls=self.json_decoder_cls)
-        return dct
+            return json.loads(serialization, cls=self.json_decoder_cls)
 
     def deserialize_json(self, serialization, use_gzip=False):
         dct = self.__get_dict(serialization, use_gzip)
@@ -169,13 +168,15 @@ class BpmnWorkflowSerializer:
         # These properties are applicable to top level & subprocesses
         dct = self.process_to_dict(workflow)
         dct['spec'] = self.spec_converter.convert(workflow.spec)
-        # These are only used at the top-level      
-        dct['subprocess_specs'] = dict(
-            (name, self.spec_converter.convert(spec)) for name, spec in workflow.subprocess_specs.items()
-        )
-        dct['subprocesses'] = dict(
-            (str(task_id), self.subworkflow_to_dict(sp)) for task_id, sp in workflow.subprocesses.items()
-        )
+        # These are only used at the top-level
+        dct['subprocess_specs'] = {
+            name: self.spec_converter.convert(spec)
+            for name, spec in workflow.subprocess_specs.items()
+        }
+        dct['subprocesses'] = {
+            str(task_id): self.subworkflow_to_dict(sp)
+            for task_id, sp in workflow.subprocesses.items()
+        }
         dct['bpmn_events'] = [self.event_to_dict(event) for event in workflow.bpmn_events]
         return dct
 
@@ -284,12 +285,11 @@ class BpmnWorkflowSerializer:
             top_level_workflow.subprocesses[task.id] = subprocess
 
         for child_task_id in task_dict['children']:
-            if child_task_id in process_dct['tasks']:
-                process_dct['tasks'][child_task_id]
-                self.task_tree_from_dict(process_dct, child_task_id, task, process, top, top_dct)
-            else:
+            if child_task_id not in process_dct['tasks']:
                 raise ValueError(f"Task {task_id} ({task_spec.name}) has child {child_task_id}, but no such task exists")
 
+            process_dct['tasks'][child_task_id]
+            self.task_tree_from_dict(process_dct, child_task_id, task, process, top, top_dct)
         return task
 
     def process_to_dict(self, process):
@@ -303,12 +303,18 @@ class BpmnWorkflowSerializer:
         }
 
     def event_to_dict(self, event):
-        dct = {
-            'event_definition': self.spec_converter.convert(event.event_definition),
+        return {
+            'event_definition': self.spec_converter.convert(
+                event.event_definition
+            ),
             'payload': self.data_converter.convert(event.payload),
-            'correlations': dict([ (k, self.data_converter.convert(v)) for k, v in event.correlations.items() ]),
+            'correlations': dict(
+                [
+                    (k, self.data_converter.convert(v))
+                    for k, v in event.correlations.items()
+                ]
+            ),
         }
-        return dct
 
     def event_from_dict(self, dct):
         return BpmnEvent(

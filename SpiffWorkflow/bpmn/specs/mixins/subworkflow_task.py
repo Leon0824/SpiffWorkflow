@@ -44,13 +44,12 @@ class SubWorkflowTask(TaskSpec):
 
     def _update_hook(self, my_task):
         subprocess = my_task.workflow.top_workflow.subprocesses.get(my_task.id)
-        if subprocess is None:
-            super()._update_hook(my_task)
-            self.create_workflow(my_task)
-            self.start_workflow(my_task)
-            my_task._set_state(TaskState.WAITING)
-        else:
+        if subprocess is not None:
             return subprocess.is_completed()
+        super()._update_hook(my_task)
+        self.create_workflow(my_task)
+        self.start_workflow(my_task)
+        my_task._set_state(TaskState.WAITING)
 
     def _on_cancel(self, my_task):
         subworkflow = my_task.workflow.top_workflow.get_subprocess(my_task)

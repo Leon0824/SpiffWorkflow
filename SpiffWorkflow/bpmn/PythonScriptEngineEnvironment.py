@@ -73,10 +73,10 @@ class TaskDataEnvironment(BasePythonScriptEngineEnvironment):
         fast with a sensible error message."""
         func_overwrites = set(self.globals).intersection(context)
         func_overwrites.update(set(external_methods).intersection(context))
-        if len(func_overwrites) > 0:
+        if func_overwrites:
             msg = f"You have task data that overwrites a predefined " \
-                  f"function(s). Please change the following variable or " \
-                  f"field name(s) to something else: {func_overwrites}"
+                      f"function(s). Please change the following variable or " \
+                      f"field name(s) to something else: {func_overwrites}"
             raise ValueError(msg)
 
 
@@ -92,17 +92,10 @@ class Box(dict):
         for arg in args:
             if isinstance(arg, dict):
                 for k, v in arg.items():
-                    if isinstance(v, dict):
-                        self[k] = Box(v)
-                    else:
-                        self[k] = v
-
+                    self[k] = Box(v) if isinstance(v, dict) else v
         if kwargs:
             for k, v in kwargs.items():
-                if isinstance(v, dict):
-                    self[k] = Box(v)
-                else:
-                    self[k] = v
+                self[k] = Box(v) if isinstance(v, dict) else v
 
     def __deepcopy__(self, memodict=None):
         if memodict is None:
@@ -116,8 +109,7 @@ class Box(dict):
         try:
             output = self[attr]
         except Exception:
-            raise AttributeError(
-                "Dictionary has no attribute '%s' " % str(attr))
+            raise AttributeError(f"Dictionary has no attribute '{str(attr)}' ")
         return output
 
     def __setattr__(self, key, value):

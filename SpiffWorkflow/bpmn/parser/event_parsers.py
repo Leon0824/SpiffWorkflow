@@ -80,9 +80,8 @@ class EventDefinitionParser(TaskParser):
 
     def parse_error_event(self, error_event):
         """Parse the errorEventDefinition node and return an instance of ErrorEventDefinition."""
-        error_ref = error_event.get('errorRef')
-        if error_ref:
-            error = one(self.doc_xpath('.//bpmn:error[@id="%s"]' % error_ref))
+        if error_ref := error_event.get('errorRef'):
+            error = one(self.doc_xpath(f'.//bpmn:error[@id="{error_ref}"]'))
             error_code = error.get('errorCode')
             name = error.get('name')
         else:
@@ -92,9 +91,8 @@ class EventDefinitionParser(TaskParser):
     def parse_escalation_event(self, escalation_event):
         """Parse the escalationEventDefinition node and return an instance of EscalationEventDefinition."""
 
-        escalation_ref = escalation_event.get('escalationRef')
-        if escalation_ref:
-            escalation = one(self.doc_xpath('.//bpmn:escalation[@id="%s"]' % escalation_ref))
+        if escalation_ref := escalation_event.get('escalationRef'):
+            escalation = one(self.doc_xpath(f'.//bpmn:escalation[@id="{escalation_ref}"]'))
             escalation_code = escalation.get('escalationCode')
             name = escalation.get('name')
         else:
@@ -105,7 +103,7 @@ class EventDefinitionParser(TaskParser):
 
         message_ref = message_event.get('messageRef')
         if message_ref is not None:
-            message = one(self.doc_xpath('.//bpmn:message[@id="%s"]' % message_ref))
+            message = one(self.doc_xpath(f'.//bpmn:message[@id="{message_ref}"]'))
             name = message.get('name')
             description = self.get_event_description(message_event)
             correlations = self.get_message_correlations(message_ref)
@@ -118,9 +116,8 @@ class EventDefinitionParser(TaskParser):
     def parse_signal_event(self, signal_event):
         """Parse the signalEventDefinition node and return an instance of SignalEventDefinition."""
 
-        signal_ref = signal_event.get('signalRef')
-        if signal_ref:
-            signal = one(self.doc_xpath('.//bpmn:signal[@id="%s"]' % signal_ref))
+        if signal_ref := signal_event.get('signalRef'):
+            signal = one(self.doc_xpath(f'.//bpmn:signal[@id="{signal_ref}"]'))
             name = signal.get('name')
         else:
             name = signal_event.getparent().get('name')
@@ -146,7 +143,11 @@ class EventDefinitionParser(TaskParser):
                 return CycleTimerEventDefinition(name, time_cycle.text, description=description)
             raise ValidationException("Unknown Time Specification", node=self.node, file_name=self.filename)
         except Exception as e:
-            raise ValidationException("Time Specification Error. " + str(e), node=self.node, file_name=self.filename)
+            raise ValidationException(
+                f"Time Specification Error. {str(e)}",
+                node=self.node,
+                file_name=self.filename,
+            )
 
     def get_message_correlations(self, message_ref):
 
@@ -175,7 +176,7 @@ class EventDefinitionParser(TaskParser):
         if cancel_activity is not None:
             kwargs['cancel_activity'] = cancel_activity
             interrupt = 'Interrupting' if cancel_activity else 'Non-Interrupting'
-            kwargs['description'] = interrupt + ' ' + kwargs['description']
+            kwargs['description'] = f'{interrupt} ' + kwargs['description']
         if parallel is not None:
             kwargs['parallel'] = parallel
         return self.spec_class(self.spec, self.bpmn_id, event_definition=event_definition, **kwargs)
@@ -205,7 +206,7 @@ class EventDefinitionParser(TaskParser):
 
         parallel = self.node.get('parallelMultiple') == 'true'
 
-        if len(event_definitions) == 0:
+        if not event_definitions:
             return NoneEventDefinition(description='Default')
         elif len(event_definitions) == 1:
             return event_definitions[0]

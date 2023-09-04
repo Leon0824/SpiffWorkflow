@@ -52,7 +52,7 @@ class TimerCycleStartTest(BpmnWorkflowTestCase):
         # allow the cycle to complete three times before being cancelled by the terminate
         # event (the timer should only run twice, we want to make sure it doesn't keep
         # executing)
-        for loopcount in range(6):
+        for _ in range(6):
             self.workflow.do_engine_steps()
             if save_restore:
                 self.save_restore()

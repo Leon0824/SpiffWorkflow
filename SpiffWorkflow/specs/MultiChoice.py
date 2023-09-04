@@ -77,7 +77,7 @@ class MultiChoice(TaskSpec):
                 raise WorkflowException('Condition with no task spec.', task_spec=self)
             task_spec = self._wf_spec.get_task_spec_from_name(name)
             if task_spec is None:
-                msg = 'Condition leads to non-existent task ' + repr(name)
+                msg = f'Condition leads to non-existent task {repr(name)}'
                 raise WorkflowException(msg, task_spec=self)
             if condition is None:
                 continue
@@ -123,5 +123,5 @@ class MultiChoice(TaskSpec):
         return serializer.serialize_multi_choice(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_multi_choice(wf_spec, s_state)

@@ -73,7 +73,11 @@ class InclusiveGateway(MultiChoice, UnstructuredJoin):
         tasks = my_task.workflow.get_tasks_from_spec_name(self.name)
 
         # Look up which tasks have parents completed.
-        completed_inputs = set([ task.parent.task_spec for task in tasks if task.parent.state == TaskState.COMPLETED ])
+        completed_inputs = {
+            task.parent.task_spec
+            for task in tasks
+            if task.parent.state == TaskState.COMPLETED
+        }
 
         # Find waiting tasks 
         # Exclude tasks whose specs have already been completed
@@ -112,7 +116,7 @@ class InclusiveGateway(MultiChoice, UnstructuredJoin):
                     unfinished_paths.append(spec)
                     break
 
-            complete = len(unfinished_paths) == 0
+            complete = not unfinished_paths
 
         return complete, waiting_tasks
 

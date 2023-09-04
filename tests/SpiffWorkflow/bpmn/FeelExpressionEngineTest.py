@@ -47,5 +47,8 @@ class FeelExpressionTest(BpmnWorkflowTestCase):
                  ("list contains(a.keys(),'c')", False, {'a': {'b': ['a', 'x']}}),
                  ]
         for test in tests:
-            self.assertEqual(self.expressionEngine._evaluate(test[0], test[2]),
-                             test[1], "test --> %s <-- with variables ==> %s <==Fail!" % (test[0], str(test[2])))
+            self.assertEqual(
+                self.expressionEngine._evaluate(test[0], test[2]),
+                test[1],
+                f"test --> {test[0]} <-- with variables ==> {str(test[2])} <==Fail!",
+            )

@@ -91,15 +91,13 @@ class EventDefinitionConverter(BpmnSpecConverter):
     """
 
     def to_dict(self, event_definition):
-        dct = {
+        return {
             'description': event_definition.description,
-            'name': event_definition.name
+            'name': event_definition.name,
         }
-        return dct
 
     def from_dict(self, dct):
-        event_definition = self.spec_class(**dct)
-        return event_definition
+        return self.spec_class(**dct)
 
     def correlation_properties_to_dict(self, props):
         return [prop.__dict__ for prop in props]

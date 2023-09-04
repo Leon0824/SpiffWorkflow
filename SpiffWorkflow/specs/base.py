@@ -167,7 +167,7 @@ class TaskSpec(object):
         """
         for key in kwargs:
             if key in self.defines:
-                msg = "Spec data %s can not be modified" % key
+                msg = f"Spec data {key} can not be modified"
                 raise WorkflowException(self, msg)
         self.data.update(kwargs)
 
@@ -232,10 +232,7 @@ class TaskSpec(object):
     def _predict_hook(self, my_task):
         # If the task's status is definite, we default to FUTURE for all it's outputs.
         # Otherwise, copy my own state to the children.
-        if  my_task._is_definite():
-            best_state = TaskState.FUTURE
-        else:
-            best_state = my_task.state
+        best_state = TaskState.FUTURE if my_task._is_definite() else my_task.state
         my_task._sync_children(self.outputs, best_state)
 
     def _update(self, my_task):
@@ -400,7 +397,7 @@ class TaskSpec(object):
         :returns: The serialized object.
         """
         module = self.__class__.__module__
-        class_name = module + '.' + self.__class__.__name__
+        class_name = f'{module}.{self.__class__.__name__}'
 
         return {
                   'class': class_name,

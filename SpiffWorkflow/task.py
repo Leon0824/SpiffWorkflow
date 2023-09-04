@@ -232,8 +232,8 @@ class Task(object):
     def state(self, value):
         if value < self._state:
             raise WorkflowException(
-                'state went from %s to %s!' % (self.get_state_name(), TaskStateNames[value]),
-                task_spec=self.task_spec
+                f'state went from {self.get_state_name()} to {TaskStateNames[value]}!',
+                task_spec=self.task_spec,
             )
         self._set_state(value)
 
@@ -249,10 +249,7 @@ class Task(object):
             logger.debug(f'State set to {TaskStateNames[value]}', extra=self.log_info())
 
     def __repr__(self):
-        return '<Task object (%s) in state %s at %s>' % (
-            self.task_spec.name,
-            self.get_state_name(),
-            hex(id(self)))
+        return f'<Task object ({self.task_spec.name}) in state {self.get_state_name()} at {hex(id(self))}>'
 
     def log_info(self, dct=None):
         extra = dct or {}
@@ -284,9 +281,7 @@ class Task(object):
         """
         Returns the top level parent.
         """
-        if self.parent is None:
-            return self
-        return self.parent._get_root()
+        return self if self.parent is None else self.parent._get_root()
 
     def _get_depth(self):
         depth = 0
@@ -334,7 +329,7 @@ class Task(object):
         self.internal_data = {}
         if data is None:
             self.data = deepcopy(self.parent.data)
-        descendants = [t for t in self]
+        descendants = list(self)
         self._drop_children(force=True)
         self._set_state(TaskState.FUTURE)
         self.task_spec._predict(self, mask=TaskState.PREDICTED_MASK|TaskState.FUTURE)
@@ -394,10 +389,10 @@ class Task(object):
                 new_children.remove(child.task_spec)
                 if not child._is_finished():
                     child._set_state(state)
+            elif child._is_definite():
+                # Definite tasks must not be removed, so they HAVE to be in the given task spec list.
+                raise WorkflowException(f'removal of non-predicted child {child}', task_spec=self.task_spec)
             else:
-                if child._is_definite():
-                    # Definite tasks must not be removed, so they HAVE to be in the given task spec list.
-                    raise WorkflowException(f'removal of non-predicted child {child}', task_spec=self.task_spec)
                 unneeded_children.append(child)
 
         # Update children accordingly
@@ -435,9 +430,7 @@ class Task(object):
         """
         if self.parent is None:
             return False
-        if self.parent == parent:
-            return True
-        return self.parent._is_descendant_of(parent)
+        return True if self.parent == parent else self.parent._is_descendant_of(parent)
 
     def _find_child_of(self, parent_task_spec):
         """
@@ -468,10 +461,7 @@ class Task(object):
         tasks = []
         if self.task_spec == task_spec:
             tasks.append(self)
-        for child in self:
-            if child.task_spec != task_spec:
-                continue
-            tasks.append(child)
+        tasks.extend(child for child in self if child.task_spec == task_spec)
         return tasks
 
     def _find_ancestor(self, task_spec):
@@ -644,13 +634,13 @@ class Task(object):
         :returns: The debug information.
         """
         dbg = (' ' * indent * 2)
-        dbg += '%s/' % self.id
-        dbg += '%s:' % self.thread_id
-        dbg += ' Task of %s' % self.get_name()
+        dbg += f'{self.id}/'
+        dbg += f'{self.thread_id}:'
+        dbg += f' Task of {self.get_name()}'
         if self.task_spec.description:
-            dbg += ' (%s)' % self.get_description()
-        dbg += ' State: %s' % self.get_state_name()
-        dbg += ' Children: %s' % len(self.children)
+            dbg += f' ({self.get_description()})'
+        dbg += f' State: {self.get_state_name()}'
+        dbg += f' Children: {len(self.children)}'
         if recursive:
             for child in self.children:
                 dbg += '\n' + child.get_dump(indent + 1)

@@ -45,10 +45,7 @@ class JSONSerializer(DictionarySerializer):
         if '__bytes__' in dct:
             return dct['__bytes__'].encode('ascii')
 
-        if '__attrib__' in dct:
-            return Attrib(dct['__attrib__'])
-
-        return dct
+        return Attrib(dct['__attrib__']) if '__attrib__' in dct else dct
 
     def _default(self, obj):
         if isinstance(obj, uuid.UUID):

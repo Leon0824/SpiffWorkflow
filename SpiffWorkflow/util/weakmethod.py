@@ -85,7 +85,7 @@ class WeakMethod(object):
         """
         method = self.get_function()
         if method is None:
-            raise DeadMethodCalled('method called on dead object ' + self.name)
+            raise DeadMethodCalled(f'method called on dead object {self.name}')
         method(*args, **kwargs)
 
 
@@ -93,16 +93,14 @@ class _WeakMethodBound(WeakMethod):
     __slots__ = 'name', 'callback', 'f', 'c'
 
     def __init__(self, f, callback):
-        name = f.__self__.__class__.__name__ + '.' + f.__func__.__name__
+        name = f'{f.__self__.__class__.__name__}.{f.__func__.__name__}'
         WeakMethod.__init__(self, name, callback)
         self.f = f.__func__
         self.c = weakref.ref(f.__self__, self._dead)
 
     def get_function(self):
         cls = self.c()
-        if cls is None:
-            return None
-        return getattr(cls, self.f.__name__)
+        return None if cls is None else getattr(cls, self.f.__name__)
 
 
 class _WeakMethodFree(WeakMethod):

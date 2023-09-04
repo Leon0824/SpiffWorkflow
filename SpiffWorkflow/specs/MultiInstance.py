@@ -97,5 +97,5 @@ class MultiInstance(TaskSpec):
         return serializer.serialize_multi_instance(self)
 
     @classmethod
-    def deserialize(self, serializer, wf_spec, s_state):
+    def deserialize(cls, serializer, wf_spec, s_state):
         return serializer.deserialize_multi_instance(wf_spec, s_state)
